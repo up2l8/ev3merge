@@ -1,0 +1,11 @@
+application: ev3merge
+version: 1-0-alpha
+runtime: python27
+api_version: 1
+threadsafe: truea
+handlers:
+- url: /.*
+  script: ev3merge_gae.app
+libraries:
+- name: webapp2
+  version: latest
