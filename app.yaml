@@ -4,6 +4,9 @@ runtime: python27
 api_version: 1
 threadsafe: truea
 handlers:
+- url: /favicon\.ico
+  static_files: static/images/favicon.ico
+  upload: static/images/favicon\.ico
 - url: /.*
   script: ev3merge_gae.app
 libraries:
