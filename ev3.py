@@ -2,6 +2,7 @@ import os
 import zipfile
 from datetime import datetime
 from lxml import etree
+import re
 
 class Ev3ProjectDefinition(object):
 
@@ -14,29 +15,21 @@ class Ev3ProjectDefinition(object):
 
     def merge(self, projdef):
        	self.combine_element(self.xmldef.getroot(), projdef.xmldef.getroot())
+        print etree.tostring(self.xmldef, pretty_print=True)
 
+    def element_repr(self, element):
+        attributes = sorted(element.attrib.items())
+        return tuple([element.tag] + attributes)
+        
     def combine_element(self, one, other):
-        mapping = {el.tag: el for el in one}
-        for el in other:
-            if len(el) == 0:
-                # Not nested
-                try:
-                    # Update the text
-                    mapping[el.tag].text = el.text
-                except KeyError:
-                    # An element with this name is not in the mapping
-                    mapping[el.tag] = el
-                    # Add it
-                    one.append(el)
+        one_mapping = {self.element_repr(el): el for el in one}
+        other_mapping = {self.element_repr(el): el for el in other}
+
+        for elr in other_mapping:
+            if elr in one_mapping:
+                self.combine_element(one_mapping[elr], other_mapping[elr])
             else:
-                try:
-                    # Recursively process the element, and update it in the same way
-                    self.combine_element(mapping[el.tag], el)
-                except KeyError:
-                    # Not in the mapping
-                    mapping[el.tag] = el
-                    # Just add it
-                    one.append(el)
+                one.append(other_mapping[elr])
 
     def dump(self):
 	return etree.tostring(self.xmldef, pretty_print=True)
@@ -46,22 +39,28 @@ class Ev3(object):
     def __init__(self, filename, name=''):
 	self.name = name
         self.zfile = zipfile.ZipFile(filename)
-	self.zdata = dict([(f, self.zfile.open(f).read()) for f in self.zfile.namelist()])
-        
-        self.special_patterns = ['Activity.x3a', 'ActivityAssets.laz', 'Project.lvprojx', '__.*']
+        self.zdata = {f: self.zfile.open(f).read() for f in self.zfile.namelist()}
+
+        self.special_patterns = ['Activity.x3a', 'ActivityAssets.laz', 'Project.lvprojx', '__.*']     
         self.project_def = Ev3ProjectDefinition(self.zfile.open('Project.lvprojx'))
 	del self.zdata['Project.lvprojx']
 
     def uniquify(self, filename, suffix='_copy'):
         basename, ext = os.path.splitext(filename)
-        while filename in self.zfile.namelist():
+        while filename in self.zdata:
             basename += suffix
             filename = basename + '.' + ext
         return filename
 
+    def file_is_special(self, filename):
+        for pattern in self.special_patterns:
+            if re.match(pattern, filename):
+                return True
+        return False
+
     def merge(self, ev3):
         for filename in ev3.zdata:
-            if filename in self.special_patterns:
+            if self.file_is_special(filename):
                 continue
             
             if filename in self.zdata:
