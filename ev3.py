@@ -1,36 +1,19 @@
-
+import os
 import zipfile
 from datetime import datetime
-
-class Ev3CompressedFile(object):
-    pass
-
-class Ev3ExternalFile(object):
-    pass
-
-class Ev3Assets(Ev3CompressedFile):
-    pass
-
-class Ev3Program(Ev3CompressedFile):
-    pass
-
-class Ev3MyBlock(object):
-    pass
+from lxml import etree
 
 class Ev3ProjectDefinition(object):
 
     def __init__(self, xmldef):
-        self.xmldef = xmldef
-
+        self.xmldef = etree.parse(xmldef)
+	#etree.register_namespace('', ns[1:-1])
+        
     def rename(self, old, new):
         pass
 
     def merge(self, projdef):
-        
-        for r in roots[1:]:
-            self.combine_element(roots[0], r)
-        et.register_namespace('', ns[1:-1])
-        return et.tostring(roots[0])
+       	self.combine_element(self.xmldef.getroot(), projdef.xmldef.getroot())
 
     def combine_element(self, one, other):
         mapping = {el.tag: el for el in one}
@@ -55,16 +38,16 @@ class Ev3ProjectDefinition(object):
                     # Just add it
                     one.append(el)
 
-class Ev3Container(object):
+class Ev3(object):
 
     def __init__(self, filename):
         self.filename = filename
         self.name, _ = os.path.splitext(os.path.basename(filename))
         self.zfile = zipfile.ZipFile(filename)
-        self.zdata = 
+	self.zdata = dict([(f, self.zfile.open(f)) for f in self.zfile.namelist()])
         
         self.special_patterns = ['Activity.x3a', 'ActivityAssets.laz', 'Project.lvprojx', '__.*']
-        self.project_def = Ev3ProjectDefinition.read(self.zfile.open(['Project.lvprojx']))
+        self.project_def = Ev3ProjectDefinition(self.zfile.open('Project.lvprojx'))
 
     def uniquify(self, filename, suffix='_copy'):
         basename, ext = os.path.splitext(filename)
@@ -74,11 +57,11 @@ class Ev3Container(object):
         return filename
 
     def merge(self, ev3):
-        for filename in ev3.zfile.namelist():
+        for filename in ev3.zdata:
             if filename in self.special_patterns:
                 continue
             
-            if filename in self.zfile.namelist():
+            if filename in self.zdata:
                 if self.zfile.getinfo(filename).CRC == ev3.zfile.getinfo(filename).CRC:
                     continue
                 else:
@@ -86,10 +69,10 @@ class Ev3Container(object):
                     ev3.project_def.rename(filename, new_filename)
                     filename = new_filename
 
-            self.zfile
-
+            self.zdata[filename] = ev3.zdata[filename]
         self.project_def.merge(ev3.project_def)
 
-
-    def write(self, filename):
-        pass
+    def write(self, fileout):
+	outfile = zipfile.ZipFile(fileout, 'w')
+	for filename in self.zdata:
+	    outfile.writestr(filename, self.zdata[filename].read())
