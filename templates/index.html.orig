@@ -6,9 +6,9 @@
 
   <body>
     <h1>EV3 Project merge utility</h1>
-    <form action="/" method="post" enctype="multipart/form-data">
-      <div>
-      <input name="file" type="file" multiple value="Choose .ev3 files" accept=".ev3"/>
+    <form action="/" class="dropzone" method="post" enctype="multipart/form-data">
+      <div class="fallback">
+	<input name="file" type="file" multiple value="Choose .ev3 files" accept=".ev3"/>
       </div>
       <input type="submit" value="Submit">
     </form>
