@@ -38,16 +38,19 @@ class Ev3ProjectDefinition(object):
                     # Just add it
                     one.append(el)
 
+    def dump(self):
+	return etree.tostring(self.xmldef, pretty_print=True)
+
 class Ev3(object):
 
-    def __init__(self, filename):
-        self.filename = filename
-        self.name, _ = os.path.splitext(os.path.basename(filename))
+    def __init__(self, filename, name=''):
+	self.name = name
         self.zfile = zipfile.ZipFile(filename)
-	self.zdata = dict([(f, self.zfile.open(f)) for f in self.zfile.namelist()])
+	self.zdata = dict([(f, self.zfile.open(f).read()) for f in self.zfile.namelist()])
         
         self.special_patterns = ['Activity.x3a', 'ActivityAssets.laz', 'Project.lvprojx', '__.*']
         self.project_def = Ev3ProjectDefinition(self.zfile.open('Project.lvprojx'))
+	del self.zdata['Project.lvprojx']
 
     def uniquify(self, filename, suffix='_copy'):
         basename, ext = os.path.splitext(filename)
@@ -75,4 +78,6 @@ class Ev3(object):
     def write(self, fileout):
 	outfile = zipfile.ZipFile(fileout, 'w')
 	for filename in self.zdata:
-	    outfile.writestr(filename, self.zdata[filename].read())
+	    filedata = self.zdata[filename]
+	    outfile.writestr(filename, filedata)
+	outfile.writestr('Project.lvprojx', self.project_def.dump())

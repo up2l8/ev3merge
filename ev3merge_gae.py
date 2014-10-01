@@ -1,8 +1,8 @@
 
-# vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
+#vim: tabstop=4 expandtab shiftwidth=4 softtabstop=4
 import os
 
-import ev3_merge
+from ev3 import Ev3
 import webapp2
 import jinja2
 import zipfile
@@ -24,15 +24,18 @@ class MainPage(webapp2.RequestHandler):
         self.response.write(template.render(context))
 
     def post(self):
-        ev3files = [f.file for f in self.request.POST.multi.getall('file')]
-        
-        merged = ev3files[0]
-        merged.read()
-        merged.seek(0)
+	upload_files = self.request.POST.multi.getall('file')
+	base_file = upload_files.pop()
+	merged = Ev3(base_file.file, name=base_file.filename)
+	
+	for upload_file in upload_files:
+	    merged.merge(Ev3(upload_file.file, name=upload_file.filename))
 
         self.response.headers['Content-type'] = 'application/octet-stream'
         self.response.headers['Content-Disposition'] = 'attachment; filename=merged.ev3'
-        self.response.write(merged.read())
-        
+	outfile = StringIO.StringIO()
+	merged.write(outfile)
+	outfile.seek(0)
+        self.response.write(outfile.read())
 
 app = webapp2.WSGIApplication([('/', MainPage),], debug=True)
