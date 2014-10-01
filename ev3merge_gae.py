@@ -26,10 +26,12 @@ class MainPage(webapp2.RequestHandler):
     def post(self):
 	upload_files = self.request.POST.multi.getall('file')
 	base_file = upload_files.pop()
-	merged = Ev3(base_file.file, name=base_file.filename)
+        name, _ = os.path.splitext(base_file.filename)
+	merged = Ev3(base_file.file, name=name)
 	
 	for upload_file in upload_files:
-	    merged.merge(Ev3(upload_file.file, name=upload_file.filename))
+            name, _ = os.path.splitext(upload_file.filename)
+	    merged.merge(Ev3(upload_file.file, name=name))
 
         self.response.headers['Content-type'] = 'application/octet-stream'
         self.response.headers['Content-Disposition'] = 'attachment; filename=merged.ev3'

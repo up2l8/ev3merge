@@ -2,7 +2,7 @@ application: ev3merge
 version: 1-0-alpha
 runtime: python27
 api_version: 1
-threadsafe: truea
+threadsafe: true
 handlers:
 - url: /favicon\.ico
   static_files: static/images/favicon.ico

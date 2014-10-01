@@ -8,14 +8,14 @@ class Ev3ProjectDefinition(object):
 
     def __init__(self, xmldef):
         self.xmldef = etree.parse(xmldef)
-	#etree.register_namespace('', ns[1:-1])
         
     def rename(self, old, new):
-        pass
+        for elem in self.xmldef.xpath("//*[@*[contains(., '%s')]]" % old):
+            for attr, value in elem.attrib.items():
+                elem.attrib[attr] = value.replace(old, new)
 
     def merge(self, projdef):
        	self.combine_element(self.xmldef.getroot(), projdef.xmldef.getroot())
-        print etree.tostring(self.xmldef, pretty_print=True)
 
     def element_repr(self, element):
         attributes = sorted(element.attrib.items())
@@ -49,7 +49,7 @@ class Ev3(object):
         basename, ext = os.path.splitext(filename)
         while filename in self.zdata:
             basename += suffix
-            filename = basename + '.' + ext
+            filename = basename + ext
         return filename
 
     def file_is_special(self, filename):
@@ -60,7 +60,9 @@ class Ev3(object):
 
     def merge(self, ev3):
         for filename in ev3.zdata:
-            if self.file_is_special(filename):
+            filename_orig = filename
+            
+            if filename in self.zdata and self.file_is_special(filename):
                 continue
             
             if filename in self.zdata:
@@ -69,9 +71,10 @@ class Ev3(object):
                 else:
                     new_filename = self.uniquify(filename, suffix='_' + ev3.name)
                     ev3.project_def.rename(filename, new_filename)
+                    print filename, new_filename
                     filename = new_filename
 
-            self.zdata[filename] = ev3.zdata[filename]
+            self.zdata[filename] = ev3.zdata[filename_orig]
         self.project_def.merge(ev3.project_def)
 
     def write(self, fileout):
