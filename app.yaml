@@ -3,12 +3,20 @@ version: 1-0-alpha
 runtime: python27
 api_version: 1
 threadsafe: true
+
 handlers:
 - url: /favicon\.ico
   static_files: static/images/favicon.ico
   upload: static/images/favicon\.ico
+- url: /scripts
+  static_dir: static/scripts
+- url: /images
+  static_dir: static/images
+- url: /css
+  static_dir: static/css
 - url: /.*
   script: ev3merge_gae.app
+
 libraries:
 - name: webapp2
   version: latest

@@ -2,16 +2,27 @@
 <html>
   <head>
     <title>EV3 Project merge utility</title>
+    <script type="text/javascript" src="scripts/dropzone.js"></script>
+    <link href="css/dropzone.css" type="text/css" rel="stylesheet"/>
   </head>
+    
+    <body>
+      <h1>Drag .ev3 files or click below:</h1>
+      <form action="/upload" class="dropzone" id="my-dropzone"></form>
+      <a style="display:none"" href="/merge" id="merge">Download Merged file</a>
+    </body>
 
-  <body>
-    <h1>EV3 Project merge utility</h1>
-    <form action="/" method="post" enctype="multipart/form-data">
-      <div>
-      <input name="file" type="file" multiple required value="Choose .ev3 files" accept=".ev3"/>
-      </div>
-      <input type="submit" value="Submit">
-    </form>
-    <hr>
-  </body>
+
+   <script>
+Dropzone.options.myDropzone = {
+  addRemoveLinks: false,
+  init: function() {
+            this.on("addedfile", function(file) {
+                // Show submit button here and/or inform user to click it.
+                document.querySelector("#merge").style.display = 'block';
+                this.emit("thumbnail", file, "images/ev3.png");
+            });
+        }
+};    </script>
+
 </html>
