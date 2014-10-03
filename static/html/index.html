@@ -7,22 +7,28 @@
   </head>
     
     <body>
-      <h1>Drag .ev3 files or click below:</h1>
+      <h1>Ev3 File Merger</h1>
       <form action="/upload" class="dropzone" id="my-dropzone"></form>
       <a style="display:none"" href="/merge" id="merge">Download Merged file</a>
+      <div id="mergelog"></div>
     </body>
 
-
    <script>
+
 Dropzone.options.myDropzone = {
   addRemoveLinks: false,
   init: function() {
             this.on("addedfile", function(file) {
-                // Show submit button here and/or inform user to click it.
-                document.querySelector("#merge").style.display = 'block';
                 this.emit("thumbnail", file, "images/ev3.png");
             });
+            this.on("queuecomplete", function() {
+                document.querySelector("#mergelog").empty;
+                document.querySelector("#mergelog").innerHTML = "<p>Log:</p><iframe style='border:none' src='/log' />"
+                // Show submit button here and/or inform user to click it.
+                document.querySelector("#merge").style.display = 'block';
+            });
         }
-};    </script>
+};
+    </script>
 
 </html>

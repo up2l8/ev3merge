@@ -59,6 +59,7 @@ class Ev3(object):
         return False
 
     def merge(self, ev3):
+        log = ''
         for filename in ev3.zdata:
             filename_orig = filename
             
@@ -71,11 +72,12 @@ class Ev3(object):
                 else:
                     new_filename = self.uniquify(filename, suffix='_' + ev3.name)
                     ev3.project_def.rename(filename, new_filename)
-                    print filename, new_filename
+                    log = log + 'Renaming %s to %s\n' % (filename, new_filename)
                     filename = new_filename
 
             self.zdata[filename] = ev3.zdata[filename_orig]
         self.project_def.merge(ev3.project_def)
+        return log
 
     def write(self, fileout):
 	outfile = zipfile.ZipFile(fileout, 'w')
