@@ -45,6 +45,10 @@ class UploadHandler(BaseHandler):
         else:
             upload_files = [value for key, value in self.request.POST.multi.items() if key.startswith('file')]
 
+	if 'merged' not in self.session:
+	    self.response.write('Session expired, please refresh')
+	    return
+
         merged = self.session['merged']
         
         if merged:
@@ -71,6 +75,11 @@ class UploadHandler(BaseHandler):
 class MergeHandler(BaseHandler):
 
     def get(self):
+
+	if 'merged' not in self.session:
+	    self.response.write('Session expired, please refresh')
+	    return
+
         self.response.headers['Content-type'] = 'application/octet-stream'
         self.response.headers['Content-Disposition'] = 'attachment; filename=merged.ev3'
         self.response.write(b64decode(self.session['merged']))
@@ -78,6 +87,9 @@ class MergeHandler(BaseHandler):
 class LogHandler(BaseHandler):
 
     def get(self):
+	if 'log' not in self.session:
+		self.response.write('Session expired, please refresh')
+
         log =  self.session['log']
         self.response.headers['Content-type'] = 'text/plain'
         self.response.write(log)
